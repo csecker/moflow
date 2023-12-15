@@ -86,6 +86,7 @@ elif data_name == 'custom':
     # Caution: Not reasonable but used in used in chain_chemistry\datasets\zinc.py:
     # 'smiles' column contains '\n', need to remove it.
     # Here we do not remove \n, because it represents atom N with single bond
+    # labels = [] # for training with no labels
     labels = ['logP', 'qed', 'SAS']
     parser = DataFrameParser(preprocessor, labels=labels, smiles_col='smiles')
     result = parser.parse(df_custom, return_smiles=True)

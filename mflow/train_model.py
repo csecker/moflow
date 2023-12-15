@@ -152,7 +152,7 @@ def train():
             b_n_squeeze_divisor = 3
         else:
             b_n_squeeze_divisor = 1
-        b_n_squeeze = transform_custom.max_atoms / b_n_squeeze_divisor  # 3, 2 or 1
+        b_n_squeeze = round(transform_custom.max_atoms / b_n_squeeze_divisor)  # 3, 2 or 1
         a_n_node = transform_custom.max_atoms
         a_n_type = len(atomic_num_list)  # is automatically obtained from the dataset
         valid_idx = transform_custom.get_val_ids()
@@ -182,7 +182,15 @@ def train():
                                    )
     print('Model params:')
     model_params.print()
-    model = MoFlow(model_params)
+
+    # If requested, load previous model snapshot
+    if args.load_params == 1 and args.load_snapshot != '':
+        from utils.model_utils import load_model
+        model_params = Hyperparameters(path=os.path.join(os.path.dirname(args.load_snapshot), 'moflow-params.json'))
+        model = load_model(args.load_snapshot, model_params, debug=False)
+    else:
+        model = MoFlow(model_params)
+
     os.makedirs(args.save_dir, exist_ok=True)
     model.save_hyperparams(os.path.join(args.save_dir, 'moflow-params.json'))
     if torch.cuda.device_count() > 1 and multigpu:
