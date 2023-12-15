@@ -392,7 +392,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_dir", type=str, default='./results')
     parser.add_argument("--data_dir", type=str, default='../data')
-    parser.add_argument('--data_name', type=str, default='qm9', choices=['qm9', 'zinc250k'], help='dataset name')
+    parser.add_argument('--data_name', type=str, default='qm9', choices=['qm9', 'zinc250k', 'custom'], help='dataset name')
     # parser.add_argument('--molecule_file', type=str, default='qm9_relgcn_kekulized_ggnp.npz',
     #                     help='path to molecule dataset')
     parser.add_argument("--snapshot-path", "-snapshot", type=str, required=True)
@@ -461,7 +461,7 @@ if __name__ == "__main__":
         molecule_file = 'zinc250k_relgcn_kekulized_ggnp.npz'
     elif args.data_name == 'custom':
         atomic_num_list = custom_atomic_num_list
-        transform_fn = transform_custom.transform_fn_custom()
+        transform_fn = transform_custom.transform_fn_custom
         # true_data = TransformDataset(true_data, transform_fn_custom)
         valid_idx = transform_custom.get_val_ids()
         molecule_file = 'custom_relgcn_kekulized_ggnp.npz'

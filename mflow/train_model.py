@@ -145,7 +145,14 @@ def train():
         # mlp_channels = [1024, 512]
         # gnn_channels = {'gcn': [16, 128], 'hidden': [256, 64]}
         b_n_type = transform_custom.n_bonds
-        b_n_squeeze = round(transform_custom.max_atoms / 2)  # 2
+        # Set b_n_squeeze_divisor based on max_atoms
+        if transform_custom.max_atoms % 2 == 0:
+            b_n_squeeze_divisor = 2
+        elif transform_custom.max_atoms % 3 == 0:
+            b_n_squeeze_divisor = 3
+        else:
+            b_n_squeeze_divisor = 1
+        b_n_squeeze = transform_custom.max_atoms / b_n_squeeze_divisor  # 3, 2 or 1
         a_n_node = transform_custom.max_atoms
         a_n_type = len(atomic_num_list)  # is automatically obtained from the dataset
         valid_idx = transform_custom.get_val_ids()
