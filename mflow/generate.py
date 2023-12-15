@@ -17,8 +17,9 @@ from rdkit.Chem import Draw, AllChem
 from rdkit import Chem
 from rdkit import Chem, DataStructs
 
-from data import transform_qm9, transform_zinc250k
+from data import transform_qm9, transform_zinc250k, transform_custom
 from data.transform_zinc250k import zinc250_atomic_num_list, transform_fn_zinc250k
+from data.transform_custom import custom_atomic_num_list, transform_fn_custom
 from mflow.models.hyperparams import Hyperparameters
 from mflow.models.utils import check_validity, adj_to_smiles, check_novelty, valid_mol, construct_mol, _to_numpy_array, correct_mol,valid_mol_can_with_seg
 from mflow.utils.model_utils import load_model, get_latent_vec
@@ -458,6 +459,12 @@ if __name__ == "__main__":
         # true_data = TransformDataset(true_data, transform_fn_zinc250k)
         valid_idx = transform_zinc250k.get_val_ids()
         molecule_file = 'zinc250k_relgcn_kekulized_ggnp.npz'
+    elif args.data_name == 'custom':
+        atomic_num_list = custom_atomic_num_list
+        transform_fn = transform_custom.transform_fn_custom()
+        # true_data = TransformDataset(true_data, transform_fn_custom)
+        valid_idx = transform_custom.get_val_ids()
+        molecule_file = 'custom_relgcn_kekulized_ggnp.npz'
 
     batch_size = args.batch_size
     dataset = NumpyTupleDataset.load(os.path.join(args.data_dir, molecule_file), transform=transform_fn)

@@ -13,6 +13,7 @@ import random
 import time
 #import matplotlib.pyplot as plt
 import csv
+import pandas as pd
 
 from contextlib import contextmanager
 import sys, os
@@ -115,6 +116,23 @@ def calculate_min_plogp(mol):
     return final_p
 
 
+# Function to calculate cycle score
+def calculate_cycle_score(mol):
+    # cycle score
+    cycle_list = nx.cycle_basis(nx.Graph(
+        Chem.rdmolops.GetAdjacencyMatrix(mol)))
+    if len(cycle_list) == 0:
+        cycle_length = 0
+    else:
+        cycle_length = max([len(j) for j in cycle_list])
+    if cycle_length <= 6:
+        cycle_length = 0
+    else:
+        cycle_length = cycle_length - 6
+    cycle_score = -cycle_length
+    return cycle_score
+
+
 def penalized_logp(mol):
     """
     Reward that consists of log p penalized by SA and # long cycles,
@@ -123,13 +141,43 @@ def penalized_logp(mol):
     :param mol: rdkit mol object
     :return: float
     """
-    # normalization constants, statistics from 250k_rndm_zinc_drugs_clean.smi
-    logP_mean = 2.4570953396190123
-    logP_std = 1.434324401111988
-    SA_mean = -3.0525811293166134
-    SA_std = 0.8335207024513095
-    cycle_mean = -0.0485696876403053
-    cycle_std = 0.2860212110245455
+
+    if os.path.exists('custom.csv'):
+        # Read custom dataset
+        df_custom = pd.read_csv('custom.csv', index_col=0)
+
+        # Convert SMILES strings to RDKit molecule objects
+        mols = [Chem.MolFromSmiles(smi) for smi in df_custom['smiles']]
+
+        # Filter out None values (failed conversions)
+        mols = [mol for mol in mols if mol is not None]
+
+        # Calculate logP_mean and logP_std values
+        logp_values = [Chem.Descriptors.MolLogP(mol) for mol in mols]
+        logp_values = [value for value in logp_values if value is not None]
+        logP_mean = sum(logp_values) / len(logp_values)
+        logP_std = (sum((x - logP_mean) ** 2 for x in logp_values) / len(logp_values)) ** 0.5
+
+        # Calculate SA_mean and SA_std values
+        SA_values = [-calculateScore(mol) for mol in mols]
+        SA_values = [value for value in SA_values if value is not None]
+        SA_mean = sum(SA_values) / len(SA_values)
+        SA_std = (sum((x - SA_mean) ** 2 for x in SA_values) / len(SA_values)) ** 0.5
+
+        # Calculate cycle_mean and cycle_std values
+        cycle_values = [calculate_cycle_score(mol) for mol in mols]
+        cycle_values = [value for value in cycle_values if value is not None]
+        cycle_mean = sum(cycle_values) / len(cycle_values)
+        cycle_std = (sum((x - cycle_mean) ** 2 for x in cycle_values) / len(cycle_values)) ** 0.5
+
+    else:
+        # normalization constants, statistics from 250k_rndm_zinc_drugs_clean.smi
+        logP_mean = 2.4570953396190123
+        logP_std = 1.434324401111988
+        SA_mean = -3.0525811293166134
+        SA_std = 0.8335207024513095
+        cycle_mean = -0.0485696876403053
+        cycle_std = 0.2860212110245455
 
     log_p = Chem.Descriptors.MolLogP(mol)
     SA = -calculateScore(mol)

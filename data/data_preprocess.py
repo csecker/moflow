@@ -10,17 +10,25 @@ import time
 from data.data_frame_parser import DataFrameParser
 from data.data_loader import NumpyTupleDataset
 from data.smile_to_graph import GGNNPreprocessor
+from rdkit import Chem
 
 
 def parse():
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('--data_name', type=str, default='qm9',
-                        choices=['qm9', 'zinc250k'],
+                        choices=['qm9', 'zinc250k', 'custom'],
                         help='dataset to be downloaded')
     parser.add_argument('--data_type', type=str, default='relgcn',
                         choices=['gcn', 'relgcn'],)
     args = parser.parse_args()
     return args
+
+def count_atoms(smiles):
+    mol = Chem.MolFromSmiles(smiles)
+    if mol is not None:
+        return mol.GetNumAtoms()
+    else:
+        return 0
 
 
 start_time = time.time()
@@ -33,6 +41,10 @@ if data_name == 'qm9':
     max_atoms = 9
 elif data_name == 'zinc250k':
     max_atoms = 38
+elif data_name == 'custom':
+    df_custom = pd.read_csv('custom.csv', index_col=0)
+    atom_counts = [count_atoms(smi) for smi in df_custom['smiles']]
+    max_atoms = max(atom_counts)
 else:
     raise ValueError("[ERROR] Unexpected value data_name={}".format(data_name))
 
@@ -65,6 +77,18 @@ elif data_name == 'zinc250k':
     labels = ['logP', 'qed', 'SAS']
     parser = DataFrameParser(preprocessor, labels=labels, smiles_col='smiles')
     result = parser.parse(df_zinc250k, return_smiles=True)
+    dataset = result['dataset']
+    smiles = result['smiles']
+elif data_name == 'custom':
+    print('Preprocessing custom data')
+    # dataset = datasets.get_custom(preprocessor)
+    df_custom = pd.read_csv('custom.csv', index_col=0)
+    # Caution: Not reasonable but used in used in chain_chemistry\datasets\zinc.py:
+    # 'smiles' column contains '\n', need to remove it.
+    # Here we do not remove \n, because it represents atom N with single bond
+    labels = ['logP', 'qed', 'SAS']
+    parser = DataFrameParser(preprocessor, labels=labels, smiles_col='smiles')
+    result = parser.parse(df_custom, return_smiles=True)
     dataset = result['dataset']
     smiles = result['smiles']
 else:

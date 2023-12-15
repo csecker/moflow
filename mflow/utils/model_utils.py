@@ -5,6 +5,7 @@ from rdkit import Chem
 
 from data import transform_qm9
 from data.transform_zinc250k import one_hot_zinc250k, transform_fn_zinc250k
+from data.transform_custom import one_hot_custom, transform_fn_custom, max_atoms
 from mflow.models.model import MoFlow as Model
 
 
@@ -27,6 +28,10 @@ def smiles_to_adj(mol_smiles, data_name='qm9'):
     if data_name == 'zinc250k':
         out_size = 38
         transform_fn = transform_fn_zinc250k
+
+    elif data_name == 'custom':
+        out_size = max_atoms
+        transform_fn = transform_fn_custom
 
     preprocessor = GGNNPreprocessor(out_size=out_size, kekulize=True)
     canonical_smiles, mol = preprocessor.prepare_smiles_and_mol(Chem.MolFromSmiles(mol_smiles)) # newly added crucial important!!!

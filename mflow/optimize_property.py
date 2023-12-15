@@ -17,8 +17,9 @@ from rdkit.Chem import AllChem, Draw
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from data import transform_qm9, transform_zinc250k
+from data import transform_qm9, transform_zinc250k, transform_custom
 from data.transform_zinc250k import zinc250_atomic_num_list, transform_fn_zinc250k
+from data.transform_custom import custom_atomic_num_list, transform_fn_custom
 # from mflow.generate import generate_mols_along_axis
 from mflow.models.hyperparams import Hyperparameters
 from mflow.models.utils import check_validity, construct_mol, adj_to_smiles
@@ -210,6 +211,10 @@ def smile_cvs_to_property(data_name='zinc250k'):
         atomic_num_list = zinc250_atomic_num_list
         filename = '../data/zinc250k.csv'
         colname = 'smiles'
+    elif data_name == 'custom':
+        atomic_num_list = custom_atomic_num_list
+        filename = '../data/custom.csv'
+        colname = 'smiles'
 
     df = pd.read_csv(filename)
     smiles = df[colname].tolist()
@@ -310,6 +315,8 @@ def load_property_csv(data_name, normalize=True):
     elif data_name == 'zinc250k':
         # Total: 249455	 Invalid: 0	 bad_plogp: 0 	 bad_qed: 0
         filename = '../data/zinc250k_property.csv'
+    elif data_name == 'custom':
+        filename = '../data/custom_property.csv'
 
     df = pd.read_csv(filename)  # qed, plogp, smile
     if normalize:
@@ -740,6 +747,12 @@ if __name__ == '__main__':
         valid_idx = transform_zinc250k.get_val_ids()
         molecule_file = 'zinc250k_relgcn_kekulized_ggnp.npz'
         # smile_cvs_to_property('zinc250k')
+    elif args.data_name == 'custom':
+        atomic_num_list = custom_atomic_num_list
+        transform_fn = transform_custom.transform_fn_custom
+        valid_idx = transform_custom.get_val_ids()
+        molecule_file = 'custom_relgcn_kekulized_ggnp.npz'
+        # smile_cvs_to_property('custom')
     else:
         raise ValueError("Wrong data_name{}".format(args.data_name))
 

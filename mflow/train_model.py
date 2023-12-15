@@ -25,7 +25,7 @@ def get_parser():
     parser = argparse.ArgumentParser()
     # data I/O
     parser.add_argument('-i', '--data_dir', type=str, default='../data', help='Location for the dataset')
-    parser.add_argument('--data_name', type=str, default='qm9', choices=['qm9', 'zinc250k'], help='dataset name')
+    parser.add_argument('--data_name', type=str, default='qm9', choices=['qm9', 'zinc250k', 'custom'], help='dataset name')
     # parser.add_argument('-f', '--data_file', type=str, default='qm9_relgcn_kekulized_ggnp.npz', help='Name of the dataset')
     parser.add_argument('-o', '--save_dir', type=str, default='results/qm9',
                         help='Location for parameter checkpoints and samples')
@@ -72,6 +72,8 @@ def get_parser():
                         help='Mask row size list for atom matrix, delimited list input ')
     parser.add_argument('--mask_row_stride_list', type=str, default="1,",
                         help='Mask row stride list for atom matrix, delimited list input')
+    parser.add_argument('--atomic_num_list', type=str, default="1,", required=False,
+                        help='List of atomic numbers. Needed if data_name is custom.')
     # General
     parser.add_argument('-s', '--seed', type=int, default=1, help='Random seed to use')
     parser.add_argument('--debug', type=strtobool, default='true', help='To run training with more information')
@@ -134,9 +136,22 @@ def train():
         a_n_node = 38
         a_n_type = len(atomic_num_list)  # 10
         valid_idx = transform_zinc250k.get_val_ids()
+    elif args.data_name == 'custom':
+        from data import transform_custom
+        data_file = 'custom_relgcn_kekulized_ggnp.npz'
+        transform_fn = transform_custom.transform_fn_custom
+        atomic_num_list = transform_custom.custom_atomic_num_list  # is automatically obtained from the dataset
+        # print(atomic_num_list)
+        # mlp_channels = [1024, 512]
+        # gnn_channels = {'gcn': [16, 128], 'hidden': [256, 64]}
+        b_n_type = transform_custom.n_bonds
+        b_n_squeeze = round(transform_custom.max_atoms / 2)  # 2
+        a_n_node = transform_custom.max_atoms
+        a_n_type = len(atomic_num_list)  # is automatically obtained from the dataset
+        valid_idx = transform_custom.get_val_ids()
     else:
-        raise ValueError('Only support qm9 and zinc250k right now. '
-                         'Parameters need change a little bit for other dataset.')
+        raise ValueError('Only support qm9, zinc250k or a custom dataset right now. '
+                         'Parameters need change a little bit for custom datasets.')
 
     model_params = Hyperparameters(b_n_type=b_n_type,  # 4,
                                    b_n_flow=args.b_n_flow,
