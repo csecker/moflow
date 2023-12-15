@@ -180,14 +180,14 @@ def check_valency(mol):
 
 
 def correct_mol(x):
-    xsm = Chem.MolToSmiles(x, isomericSmiles=True)
+    # xsm = Chem.MolToSmiles(x, isomericSmiles=True) # not sure what this is for but can cause errors
     mol = x
     while True:
         flag, atomid_valence = check_valency(mol)
         if flag:
             break
         else:
-            assert len (atomid_valence) == 2
+            assert len(atomid_valence) == 2
             idx = atomid_valence[0]
             v = atomid_valence[1]
             queue = []
