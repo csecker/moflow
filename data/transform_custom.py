@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 from rdkit import Chem
 import random
+import os
 
 
 # Function to extract atomic numbers from a SMILES string
@@ -34,24 +35,34 @@ def count_bond_types(smiles):
 # Getting custom dataset
 df_custom = pd.read_csv('../data/custom.csv', index_col=0)
 
-# Extract unique atomic numbers from the entire SMILES list
-unique_atomic_numbers = set()
-for smi in df_custom['smiles']:
-    unique_atomic_numbers.update(extract_atomic_numbers(smi))
-custom_atomic_num_list = sorted(list(unique_atomic_numbers))
-custom_atomic_num_list.append(0)
+# Setting atomic num list
+if os.getenv('VFGM_MOFLOW_ATOMIC_NUM_LIST', '') == '':
+    # Extract unique atomic numbers from the entire SMILES list
+    unique_atomic_numbers = set()
+    for smi in df_custom['smiles']:
+        unique_atomic_numbers.update(extract_atomic_numbers(smi))
+    custom_atomic_num_list = sorted(list(unique_atomic_numbers))
+    custom_atomic_num_list.append(0)
+else:
+    custom_atomic_num_list = os.getenv('VFGM_MOFLOW_ATOMIC_NUM_LIST', '')
+    custom_atomic_num_list = custom_atomic_num_list.split(':')
+    custom_atomic_num_list = [int(element) for element in custom_atomic_num_list]
 print("Unique Atomic Numbers from the custom smiles List:", custom_atomic_num_list)
 
-# Calculate the number of atoms for each SMILES
-atom_counts = [count_atoms(smi) for smi in df_custom['smiles']]
-max_atoms = max(atom_counts)
+# Setting max atoms
+if os.getenv('VFGM_MOFLOW_MAX_ATOMS', '') == '':
+    # Calculate the number of atoms for each SMILES
+    atom_counts = [count_atoms(smi) for smi in df_custom['smiles']]
+    max_atoms = max(atom_counts)
+else:
+    max_atoms = int(os.getenv('VFGM_MOFLOW_MAX_ATOMS', ''))
 print("Max atoms:", max_atoms)
 
 # Calculate the number of bond types for each SMILES
 bond_types_counts = [count_bond_types(smi) for smi in df_custom['smiles']]
 # Get the total number of unique bond types in the entire dataset
 n_bonds = max(bond_types_counts)
-print("Number of bonds:", n_bonds)
+print("Number of bonds for current dataset:", n_bonds)
 
 # custom_atomic_num_list = [6, 7, 8, 9, 15, 16, 17, 35, 53, 0]  # 0 is for virtual node.
 # max_atoms = 38

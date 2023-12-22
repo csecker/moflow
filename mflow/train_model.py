@@ -72,7 +72,7 @@ def get_parser():
                         help='Mask row size list for atom matrix, delimited list input ')
     parser.add_argument('--mask_row_stride_list', type=str, default="1,",
                         help='Mask row stride list for atom matrix, delimited list input')
-    parser.add_argument('--atomic_num_list', type=str, default="1,", required=False,
+    parser.add_argument('--atomic_num_list', type=str, default="", required=False,
                         help='List of atomic numbers. Needed if data_name is custom.')
     # General
     parser.add_argument('-s', '--seed', type=int, default=1, help='Random seed to use')
@@ -140,22 +140,36 @@ def train():
         from data import transform_custom
         data_file = 'custom_relgcn_kekulized_ggnp.npz'
         transform_fn = transform_custom.transform_fn_custom
-        atomic_num_list = transform_custom.custom_atomic_num_list  # is automatically obtained from the dataset
-        # print(atomic_num_list)
-        # mlp_channels = [1024, 512]
-        # gnn_channels = {'gcn': [16, 128], 'hidden': [256, 64]}
-        b_n_type = transform_custom.n_bonds
-        # Set b_n_squeeze_divisor based on max_atoms
-        if transform_custom.max_atoms % 2 == 0:
-            b_n_squeeze_divisor = 2
-        elif transform_custom.max_atoms % 3 == 0:
-            b_n_squeeze_divisor = 3
+
+        if args.load_params == 1 and args.load_snapshot != '':
+            model_params_data = json.load(open(os.path.join(os.path.dirname(args.load_snapshot), 'moflow-params.json'), 'r'))
+            b_n_type = model_params_data['b_n_type']
+            b_n_squeeze = model_params_data['b_n_squeeze']
+            a_n_node = model_params_data['a_n_node']
+            a_n_type = model_params_data['a_n_type']
+            atomic_num_list = os.getenv('VFGM_MOFLOW_ATOMIC_NUM_LIST', '')
+            atomic_num_list = atomic_num_list.split(':')
+            atomic_num_list = [int(element) for element in atomic_num_list]
+
         else:
-            b_n_squeeze_divisor = 1
-        b_n_squeeze = round(transform_custom.max_atoms / b_n_squeeze_divisor)  # 3, 2 or 1
-        a_n_node = transform_custom.max_atoms
-        a_n_type = len(atomic_num_list)  # is automatically obtained from the dataset
+            atomic_num_list = transform_custom.custom_atomic_num_list  # is automatically obtained from the dataset
+            # print(atomic_num_list)
+            # mlp_channels = [1024, 512]
+            # gnn_channels = {'gcn': [16, 128], 'hidden': [256, 64]}
+            b_n_type = transform_custom.n_bonds
+            # Set b_n_squeeze_divisor based on max_atoms
+            if transform_custom.max_atoms % 2 == 0:
+                b_n_squeeze_divisor = 2
+            elif transform_custom.max_atoms % 3 == 0:
+                b_n_squeeze_divisor = 3
+            else:
+                b_n_squeeze_divisor = 1
+            b_n_squeeze = round(transform_custom.max_atoms / b_n_squeeze_divisor)  # 3, 2 or 1
+            a_n_node = transform_custom.max_atoms
+            a_n_type = len(atomic_num_list)  # is automatically obtained from the dataset
+
         valid_idx = transform_custom.get_val_ids()
+
     else:
         raise ValueError('Only support qm9, zinc250k or a custom dataset right now. '
                          'Parameters need change a little bit for custom datasets.')
@@ -180,8 +194,6 @@ def train():
                                    seed=args.seed,
                                    noise_scale=args.noise_scale
                                    )
-    print('Model params:')
-    model_params.print()
 
     # If requested, load previous model snapshot
     if args.load_params == 1 and args.load_snapshot != '':
@@ -190,6 +202,9 @@ def train():
         model = load_model(args.load_snapshot, model_params, debug=False)
     else:
         model = MoFlow(model_params)
+
+    print('Model params:')
+    model_params.print()
 
     os.makedirs(args.save_dir, exist_ok=True)
     model.save_hyperparams(os.path.join(args.save_dir, 'moflow-params.json'))

@@ -2,6 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$USER_HOME$/ZIB-Cloud/Documents/Data/Generative_Models/JANUS_MOD/.idea/JANUS_MOD.iml" filepath="$USER_HOME$/ZIB-Cloud/Documents/Data/Generative_Models/JANUS_MOD/.idea/JANUS_MOD.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../VFGM/.idea/VFGM.iml" filepath="$PROJECT_DIR$/../VFGM/.idea/VFGM.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../VFLP/.idea/VFLP.iml" filepath="$PROJECT_DIR$/../VFLP/.idea/VFLP.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/moflow.iml" filepath="$PROJECT_DIR$/.idea/moflow.iml" />
     </modules>
   </component>
