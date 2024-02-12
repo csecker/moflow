@@ -47,7 +47,7 @@ else:
     custom_atomic_num_list = os.getenv('VFGM_MOFLOW_ATOMIC_NUM_LIST', '')
     custom_atomic_num_list = custom_atomic_num_list.split(':')
     custom_atomic_num_list = [int(element) for element in custom_atomic_num_list]
-print("Unique Atomic Numbers from the custom smiles List:", custom_atomic_num_list)
+print("Unique atomic numbers from all smiles:", custom_atomic_num_list)
 
 # Setting max atoms
 if os.getenv('VFGM_MOFLOW_MAX_ATOMS', '') == '':
