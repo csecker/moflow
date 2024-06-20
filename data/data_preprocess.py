@@ -45,7 +45,7 @@ elif data_name == 'zinc250k':
     max_atoms = 38
 
 elif data_name == 'custom':
-    if args.max_atoms is not None or args.max_atoms != '':
+    if args.max_atoms is not None:
         max_atoms = int(args.max_atoms)
     else:
         df_custom = pd.read_csv('custom.csv', index_col=0)
