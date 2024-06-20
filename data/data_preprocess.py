@@ -21,6 +21,7 @@ def parse():
     parser.add_argument('--data_type', type=str, default='relgcn',
                         choices=['gcn', 'relgcn'],)
     parser.add_argument('--max_atoms', type=str, required=False)
+    parser.add_argument('--additional_features', action='store_true', required=False)
     args = parser.parse_args()
     return args
 
@@ -94,8 +95,10 @@ elif data_name == 'custom':
     # Caution: Not reasonable but used in chain_chemistry\datasets\zinc.py:
     # 'smiles' column contains '\n', need to remove it.
     # Here we do not remove \n, because it represents atom N with single bond
-    labels = [] # for training with no labels
-    # labels = ['logP', 'qed', 'SAS']
+    if args.additional_features:
+        labels = ['logP', 'qed', 'SAS']
+    else:
+        labels = [] # for training with no labels
     parser = DataFrameParser(preprocessor, labels=labels, smiles_col='smiles')
     result = parser.parse(df_custom, return_smiles=True)
     dataset = result['dataset']
